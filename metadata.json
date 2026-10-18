@@ -1,0 +1,6 @@
+{
+  "name": "Agentic Office 3D",
+  "description": "Interactive 3D simulation of an autonomous AI agent team (Planner, Coder, Reviewer) collaborating in real time.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
