@@ -29,6 +29,7 @@ export default function App() {
   });
   const [activeTask, setActiveTask] = useState<Task | null>(null);
   const [completedTasksCount, setCompletedTasksCount] = useState<number>(0);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>(() => [
     {
       id: 'log-init',
@@ -36,6 +37,7 @@ export default function App() {
       type: 'task_created',
       title: '🏢 Agentic Office online',
       detail: 'Autonomous team initialized: Planner 🗂️, Coder 💻, Reviewer 🔍.',
+      agentId: 'planner',
     },
   ]);
 
@@ -50,6 +52,7 @@ export default function App() {
   const [inspectedAgentId, setInspectedAgentId] = useState<AgentId | null>(null);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState<boolean>(false);
   const [isActivityLogOpen, setIsActivityLogOpen] = useState<boolean>(false);
+  const [activityAgentFilter, setActivityAgentFilter] = useState<AgentId | null>(null);
 
   // 2D Screen Projection coordinates for speech bubbles
   const [screenCoords, setScreenCoords] = useState<Record<AgentId, { x: number; y: number; visible: boolean }>>({
@@ -69,17 +72,31 @@ export default function App() {
   const isPausedRef = useRef(isPaused);
   isPausedRef.current = isPaused;
 
-  const logActivity = useCallback((type: ActivityLog['type'], title: string, detail?: string, agentId?: AgentId) => {
-    const newLog: ActivityLog = {
-      id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
-      timestamp: Date.now(),
-      type,
-      title,
-      detail,
-      agentId,
-    };
-    setActivityLogs((prev) => [newLog, ...prev.slice(0, 49)]);
-  }, []);
+  const logActivity = useCallback(
+    (
+      type: ActivityLog['type'],
+      title: string,
+      detail?: string,
+      agentId?: AgentId,
+      targetAgentId?: AgentId,
+      taskId?: string,
+      taskTitle?: string
+    ) => {
+      const newLog: ActivityLog = {
+        id: `log-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        timestamp: Date.now(),
+        type,
+        title,
+        detail,
+        agentId,
+        targetAgentId,
+        taskId,
+        taskTitle,
+      };
+      setActivityLogs((prev) => [newLog, ...prev.slice(0, 99)]);
+    },
+    []
+  );
 
   // Update speech & state of an agent
   const updateAgentState = useCallback((agentId: AgentId, updates: Partial<AgentInfo>) => {
@@ -96,9 +113,13 @@ export default function App() {
   const executeStep = useCallback((stepIndex: number, script: WorkflowStep[], task: Task) => {
     if (stepIndex >= script.length) {
       // Task is finished
-      task.status = 'completed';
-      task.progress = 100;
-      task.completedAt = Date.now();
+      const finishedTask: Task = {
+        ...task,
+        status: 'completed',
+        progress: 100,
+        completedAt: Date.now(),
+      };
+      setCompletedTasks((prev) => [finishedTask, ...prev]);
       setActiveTask(null);
       setCompletedTasksCount((c) => c + 1);
 
@@ -107,18 +128,41 @@ export default function App() {
         'task_completed',
         `🎉 Sprint completed: ${task.title}`,
         'Sprint verified by Reviewer and merged to main.',
-        'planner'
+        'reviewer',
+        'planner',
+        task.id,
+        task.title
       );
 
-      // Reset all agents to idle state
-      (['planner', 'coder', 'reviewer'] as AgentId[]).forEach((aid) => {
-        updateAgentState(aid, {
+      // Reset all agents to idle state and update individual stats
+      setAgents((prev) => ({
+        planner: {
+          ...prev.planner,
           speechKind: 'idle',
-          speechText: aid === 'coder' ? 'Ready for next task ☕' : 'Ready!',
+          speechText: 'Ready for next sprint!',
           currentAction: 'Idle at desk',
           isSpeaking: true,
-        });
-      });
+          tasksCompleted: prev.planner.tasksCompleted + 1,
+        },
+        coder: {
+          ...prev.coder,
+          speechKind: 'idle',
+          speechText: 'Ready for next task ☕',
+          currentAction: 'Idle at desk',
+          isSpeaking: true,
+          tasksCompleted: prev.coder.tasksCompleted + 1,
+          linesOfCode: prev.coder.linesOfCode + Math.floor(Math.random() * 80 + 120),
+        },
+        reviewer: {
+          ...prev.reviewer,
+          speechKind: 'idle',
+          speechText: 'Standards remain high today.',
+          currentAction: 'Idle at desk',
+          isSpeaking: true,
+          tasksCompleted: prev.reviewer.tasksCompleted + 1,
+          reviewsCompleted: prev.reviewer.reviewsCompleted + 1,
+        },
+      }));
 
       isExecutingRef.current = false;
       return;
@@ -163,7 +207,9 @@ export default function App() {
     }
 
     logActivity(
-      step.taskStatus === 'planning'
+      step.action === 'talk' || step.action === 'walk_to'
+        ? 'handoff'
+        : step.taskStatus === 'planning'
         ? 'planning'
         : step.taskStatus === 'coding'
         ? 'coding'
@@ -172,7 +218,10 @@ export default function App() {
         : 'handoff',
       step.logTitle,
       step.logDetail,
-      step.actor
+      step.actor,
+      step.target,
+      task.id,
+      task.title
     );
 
     // Schedule next step respecting simulation speed and pause
@@ -204,7 +253,11 @@ export default function App() {
         logActivity(
           'task_created',
           `🗂️ Starting task: ${nextTask.title}`,
-          `Priority: ${nextTask.priority.toUpperCase()} - Handed to Planner for decomposition.`
+          `Priority: ${nextTask.priority.toUpperCase()} - Handed to Planner for decomposition.`,
+          'planner',
+          undefined,
+          nextTask.id,
+          nextTask.title
         );
 
         const script = getWorkflowScriptForTask(nextTask);
@@ -226,7 +279,15 @@ export default function App() {
   const handleAddNewTask = (title: string, priority: TaskPriority, description: string) => {
     const newTask = createNewTask(title, priority, description);
     setTaskQueue((prev) => sortTasksByPriority([...prev, newTask]));
-    logActivity('task_created', `➕ Task queued: ${newTask.title}`, `Priority: ${priority.toUpperCase()}`);
+    logActivity(
+      'task_created',
+      `➕ Task queued: ${newTask.title}`,
+      `Priority: ${priority.toUpperCase()}`,
+      'planner',
+      undefined,
+      newTask.id,
+      newTask.title
+    );
     soundManager.playDialogueBlip(60);
   };
 
@@ -312,14 +373,27 @@ export default function App() {
         agent={inspectedAgentId ? agents[inspectedAgentId] : null}
         onClose={() => setInspectedAgentId(null)}
         onFocusAgent={(id) => setCameraView(id)}
+        onViewActivity={(agentId) => {
+          setActivityAgentFilter(agentId);
+          setIsActivityLogOpen(true);
+        }}
       />
 
       {/* Drawer: Real-time Activity Logs */}
       <ActivityLogDrawer
         isOpen={isActivityLogOpen}
         logs={activityLogs}
-        onClose={() => setIsActivityLogOpen(false)}
+        agents={agents}
+        activeTask={activeTask}
+        taskQueue={taskQueue}
+        completedTasks={completedTasks}
+        initialAgentFilter={activityAgentFilter}
+        onClose={() => {
+          setIsActivityLogOpen(false);
+          setActivityAgentFilter(null);
+        }}
         onClearLogs={() => setActivityLogs([])}
+        onFocusAgent={(id) => setCameraView(id)}
       />
     </div>
   );

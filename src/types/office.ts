@@ -48,9 +48,12 @@ export interface ActivityLog {
   id: string;
   timestamp: number;
   agentId?: AgentId;
+  targetAgentId?: AgentId;
   type: ActivityType;
   title: string;
   detail?: string;
+  taskId?: string;
+  taskTitle?: string;
 }
 
 export type CameraView = 'overview' | 'planner' | 'coder' | 'reviewer' | 'cinematic';

@@ -1,17 +1,18 @@
-import React from 'react';
-import { X, Camera, Award, Terminal, Code2, CheckCheck, Compass } from 'lucide-react';
+import { X, Camera, Award, Terminal, Code2, CheckCheck, Compass, Activity } from 'lucide-react';
 import type { AgentId, AgentInfo } from '../types/office.ts';
 
 interface AgentInspectorModalProps {
   agent: AgentInfo | null;
   onClose: () => void;
   onFocusAgent: (agentId: AgentId) => void;
+  onViewActivity?: (agentId: AgentId) => void;
 }
 
 export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
   agent,
   onClose,
   onFocusAgent,
+  onViewActivity,
 }) => {
   if (!agent) return null;
 
@@ -105,17 +106,30 @@ export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
-          <div className="text-[11px] text-slate-500 font-medium">
-            Desk coordinates: {agent.deskPos[0]}x, {agent.deskPos[2]}z
-          </div>
+        <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800 gap-2">
+          {onViewActivity ? (
+            <button
+              onClick={() => {
+                onViewActivity(agent.id);
+                onClose();
+              }}
+              className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-300 text-xs font-bold rounded-xl border border-indigo-200 dark:border-indigo-800 transition-all active:scale-95"
+            >
+              <Activity className="w-3.5 h-3.5" />
+              <span>Aktivitas & Task</span>
+            </button>
+          ) : (
+            <div className="text-[11px] text-slate-500 font-medium">
+              Desk: {agent.deskPos[0]}x, {agent.deskPos[2]}z
+            </div>
+          )}
 
           <button
             onClick={() => {
               onFocusAgent(agent.id);
               onClose();
             }}
-            className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-md transition-all active:scale-95"
+            className="flex items-center gap-1.5 px-4 py-2 bg-slate-900 dark:bg-slate-100 hover:bg-slate-800 text-white dark:text-slate-900 text-xs font-bold rounded-xl shadow-md transition-all active:scale-95 ml-auto"
           >
             <Camera className="w-3.5 h-3.5" />
             <span>Focus in 3D</span>
