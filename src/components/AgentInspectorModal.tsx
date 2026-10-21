@@ -116,7 +116,7 @@ export const AgentInspectorModal: React.FC<AgentInspectorModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50 dark:bg-indigo-950/70 hover:bg-indigo-100 dark:hover:bg-indigo-900/80 text-indigo-600 dark:text-indigo-300 text-xs font-bold rounded-xl border border-indigo-200 dark:border-indigo-800 transition-all active:scale-95"
             >
               <Activity className="w-3.5 h-3.5" />
-              <span>Aktivitas & Task</span>
+              <span>Activity & Tasks</span>
             </button>
           ) : (
             <div className="text-[11px] text-slate-500 font-medium">

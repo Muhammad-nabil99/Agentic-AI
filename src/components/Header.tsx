@@ -148,7 +148,7 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
 
-        {/* Quick Theme Filter (Pagi, Sore, Malam, Cyberpunk) */}
+        {/* Quick Theme Filter (Morning, Sunset, Night, Cyberpunk) */}
         {onChangeTheme && theme && (
           <div className="hidden sm:flex items-center bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 p-1 rounded-2xl shadow-xl backdrop-blur-md">
             <button
@@ -158,8 +158,8 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
-              title="Tema Pagi (Daylight)"
-              aria-label="Set daylight theme"
+              title="Morning Theme (Daylight)"
+              aria-label="Set morning theme"
             >
               <Sun className="w-4 h-4" />
             </button>
@@ -170,7 +170,7 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-orange-100 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
-              title="Tema Sore (Sunset)"
+              title="Sunset Theme (Golden Hour)"
               aria-label="Set sunset theme"
             >
               <Sunset className="w-4 h-4" />
@@ -182,7 +182,7 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-sky-100 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
-              title="Tema Malam (Night)"
+              title="Night Theme (Desk Lamps On)"
               aria-label="Set night theme"
             >
               <Moon className="w-4 h-4" />
@@ -194,7 +194,7 @@ export const Header: React.FC<HeaderProps> = ({
                   ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 font-bold shadow-xs'
                   : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
               }`}
-              title="Tema Cyberpunk (Neon)"
+              title="Cyberpunk Theme (Neon Glow)"
               aria-label="Set cyberpunk theme"
             >
               <Sparkles className="w-4 h-4" />

@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
-import type { AgentId, AgentInfo, CameraView, LightingTheme, Task, TaskStatus } from '../types/office.ts';
+import type { AgentId, AgentInfo, CameraView, LightingTheme, Task, TaskStatus, WindowConfig } from '../types/office.ts';
 import { soundManager } from '../utils/audio.ts';
 
 interface AgentMeshState {
@@ -25,11 +25,304 @@ interface AgentMeshState {
   t: number;
 }
 
+interface DeskLampData {
+  light: THREE.PointLight;
+  bulbMesh: THREE.Mesh;
+  bulbMat: THREE.MeshBasicMaterial;
+  haloDisc: THREE.Mesh;
+  agentId: AgentId;
+}
+
+interface SkylineBuildingData {
+  facadeMesh: THREE.Mesh;
+  facadeMat: THREE.MeshStandardMaterial;
+  windowsMesh: THREE.Mesh;
+  windowsMat: THREE.MeshBasicMaterial;
+  baseColor: number;
+  sunsetColor: number;
+  nightColor: number;
+  cyberColor: number;
+}
+
+interface ThemeRig {
+  sun: THREE.DirectionalLight;
+  hemi: THREE.HemisphereLight;
+  deskLamps: DeskLampData[];
+  panoramicGlassMat: THREE.MeshPhysicalMaterial;
+  windowLedgeLedMat: THREE.MeshBasicMaterial;
+  skylineBuildings: SkylineBuildingData[];
+  rooftopBeaconMats: THREE.MeshBasicMaterial[];
+  scene: THREE.Scene;
+  renderer: THREE.WebGLRenderer;
+  baseNearFog: number;
+  baseFarFog: number;
+  dayTex: THREE.CanvasTexture;
+  sunsetTex: THREE.CanvasTexture;
+  nightTex: THREE.CanvasTexture;
+  cyberTex: THREE.CanvasTexture;
+}
+
+export function applyThemeToRig(rig: ThemeRig, theme: LightingTheme, windowConfig: WindowConfig) {
+  const {
+    scene,
+    renderer,
+    sun,
+    hemi,
+    deskLamps,
+    panoramicGlassMat,
+    windowLedgeLedMat,
+    skylineBuildings,
+    rooftopBeaconMats,
+    dayTex,
+    sunsetTex,
+    nightTex,
+    cyberTex,
+  } = rig;
+
+  // 1. Scene Background & Atmospheric Fog
+  let baseNear = 22;
+  let baseFar = 65;
+
+  switch (theme) {
+    case 'daylight': {
+      scene.background = new THREE.Color(0xdbeafe);
+      baseNear = 24;
+      baseFar = 68;
+      if (scene.fog instanceof THREE.Fog) {
+        scene.fog.color.setHex(0xdbeafe);
+      }
+      sun.color.setHex(0xfff8ee);
+      sun.intensity = 1.35;
+      sun.position.set(6, 12, 7);
+
+      hemi.color.setHex(0xffffff);
+      hemi.groundColor.setHex(0xcad8ea);
+      hemi.intensity = 0.85;
+
+      windowLedgeLedMat.color.setHex(0x93c5fd);
+
+      // Desk lamps OFF during daylight
+      deskLamps.forEach((lamp) => {
+        lamp.light.intensity = 0;
+        lamp.bulbMat.color.setHex(0x8a92a0);
+        (lamp.haloDisc.material as THREE.MeshBasicMaterial).opacity = 0;
+      });
+
+      // Skyline Buildings in Daylight
+      skylineBuildings.forEach((b) => {
+        b.facadeMat.color.setHex(b.baseColor);
+        b.windowsMat.map = dayTex;
+        b.windowsMat.color.setHex(0xffffff);
+        b.windowsMat.needsUpdate = true;
+      });
+
+      rooftopBeaconMats.forEach((mat) => mat.color.setHex(0xef4444));
+      renderer.toneMappingExposure = 1.15;
+      break;
+    }
+
+    case 'sunset': {
+      scene.background = new THREE.Color(0x322036);
+      baseNear = 19;
+      baseFar = 58;
+      if (scene.fog instanceof THREE.Fog) {
+        scene.fog.color.setHex(0x322036);
+      }
+      sun.color.setHex(0xff7a38);
+      sun.intensity = 1.15;
+      sun.position.set(9, 5, 5);
+
+      hemi.color.setHex(0xffaa70);
+      hemi.groundColor.setHex(0x3a2548);
+      hemi.intensity = 0.65;
+
+      windowLedgeLedMat.color.setHex(0xf97316);
+
+      // Desk lamps warming up at sunset
+      deskLamps.forEach((lamp) => {
+        lamp.light.color.setHex(0xffb86c);
+        lamp.light.intensity = 1.2;
+        lamp.bulbMat.color.setHex(0xffcf85);
+        const mat = lamp.haloDisc.material as THREE.MeshBasicMaterial;
+        mat.color.setHex(0xffb86c);
+        mat.opacity = 0.16;
+      });
+
+      // Skyline Buildings at Sunset
+      skylineBuildings.forEach((b) => {
+        b.facadeMat.color.setHex(b.sunsetColor);
+        b.windowsMat.map = sunsetTex;
+        b.windowsMat.color.setHex(0xffe8d6);
+        b.windowsMat.needsUpdate = true;
+      });
+
+      rooftopBeaconMats.forEach((mat) => mat.color.setHex(0xff6b4a));
+      renderer.toneMappingExposure = 1.1;
+      break;
+    }
+
+    case 'night': {
+      scene.background = new THREE.Color(0x080c16);
+      baseNear = 17;
+      baseFar = 52;
+      if (scene.fog instanceof THREE.Fog) {
+        scene.fog.color.setHex(0x080c16);
+      }
+      sun.color.setHex(0x6b8ecc);
+      sun.intensity = 0.28;
+      sun.position.set(-8, 9, 3);
+
+      hemi.color.setHex(0x1a2436);
+      hemi.groundColor.setHex(0x090d15);
+      hemi.intensity = 0.22;
+
+      windowLedgeLedMat.color.setHex(0x38bdf8);
+
+      // Desk lamps TURN ON BRIGHTLY at night
+      deskLamps.forEach((lamp) => {
+        lamp.light.color.setHex(0xffdfa0);
+        lamp.light.intensity = 3.0;
+        lamp.bulbMat.color.setHex(0xfff6dc);
+        const mat = lamp.haloDisc.material as THREE.MeshBasicMaterial;
+        mat.color.setHex(0xffdfa0);
+        mat.opacity = 0.32;
+      });
+
+      // Skyline Buildings at Night: Illuminated windows glowing warmly
+      skylineBuildings.forEach((b) => {
+        b.facadeMat.color.setHex(b.nightColor);
+        b.windowsMat.map = nightTex;
+        b.windowsMat.color.setHex(0xffffff);
+        b.windowsMat.needsUpdate = true;
+      });
+
+      rooftopBeaconMats.forEach((mat) => mat.color.setHex(0xff2222));
+      renderer.toneMappingExposure = 1.25;
+      break;
+    }
+
+    case 'cyberpunk': {
+      scene.background = new THREE.Color(0x06030e);
+      baseNear = 16;
+      baseFar = 48;
+      if (scene.fog instanceof THREE.Fog) {
+        scene.fog.color.setHex(0x06030e);
+      }
+      sun.color.setHex(0x00d4ff);
+      sun.intensity = 0.38;
+      sun.position.set(5, 8, 6);
+
+      hemi.color.setHex(0x7928ca);
+      hemi.groundColor.setHex(0x00f0ff);
+      hemi.intensity = 0.35;
+
+      windowLedgeLedMat.color.setHex(0x00f0ff);
+
+      // Signature neon lights around each agent
+      deskLamps.forEach((lamp) => {
+        let neonColor = 0x00e5ff;
+        let bulbColor = 0x80f2ff;
+
+        if (lamp.agentId === 'planner') {
+          neonColor = 0xff2575;
+          bulbColor = 0xff66a3;
+        } else if (lamp.agentId === 'coder') {
+          neonColor = 0x00d4ff;
+          bulbColor = 0x5ce6ff;
+        } else if (lamp.agentId === 'reviewer') {
+          neonColor = 0x00ff88;
+          bulbColor = 0x66ffb2;
+        }
+
+        lamp.light.color.setHex(neonColor);
+        lamp.light.intensity = 3.4;
+        lamp.bulbMat.color.setHex(bulbColor);
+        const mat = lamp.haloDisc.material as THREE.MeshBasicMaterial;
+        mat.color.setHex(neonColor);
+        mat.opacity = 0.38;
+      });
+
+      // Skyline Buildings in Cyberpunk
+      skylineBuildings.forEach((b) => {
+        b.facadeMat.color.setHex(b.cyberColor);
+        b.windowsMat.map = cyberTex;
+        b.windowsMat.color.setHex(0xffffff);
+        b.windowsMat.needsUpdate = true;
+      });
+
+      rooftopBeaconMats.forEach((mat, idx) =>
+        mat.color.setHex(idx % 2 === 0 ? 0x00f0ff : 0xff007f)
+      );
+      renderer.toneMappingExposure = 1.35;
+      break;
+    }
+  }
+
+  rig.baseNearFog = baseNear;
+  rig.baseFarFog = baseFar;
+
+  // 2. Apply Dynamic Window & Glass Customization from windowConfig
+  applyWindowConfig(rig, windowConfig, theme);
+}
+
+export function applyWindowConfig(rig: ThemeRig, config: WindowConfig, theme: LightingTheme) {
+  const { scene, panoramicGlassMat, skylineBuildings, baseNearFog, baseFarFog } = rig;
+
+  // Glass Opacity
+  panoramicGlassMat.opacity = Math.max(0.12, Math.min(0.88, config.glassOpacity));
+
+  // Glass Tint
+  if (config.glassTint === 'clear') {
+    panoramicGlassMat.color.setHex(0xf0f8ff);
+  } else if (config.glassTint === 'azure') {
+    panoramicGlassMat.color.setHex(0x38bdf8);
+  } else if (config.glassTint === 'obsidian') {
+    panoramicGlassMat.color.setHex(0x0f172a);
+  } else {
+    // Auto (Adapts to theme)
+    switch (theme) {
+      case 'daylight':
+        panoramicGlassMat.color.setHex(0xbbe4ff);
+        break;
+      case 'sunset':
+        panoramicGlassMat.color.setHex(0xff8c55);
+        break;
+      case 'night':
+        panoramicGlassMat.color.setHex(0x0d1829);
+        break;
+      case 'cyberpunk':
+        panoramicGlassMat.color.setHex(0x320054);
+        break;
+    }
+  }
+
+  // Skyline Fog Depth
+  if (scene.fog instanceof THREE.Fog) {
+    const depthMul = Math.max(0.4, Math.min(2.2, config.skylineDepth));
+    scene.fog.near = baseNearFog * depthMul;
+    scene.fog.far = baseFarFog * depthMul;
+  }
+
+  // Skyline Window Glow
+  const glow = Math.max(0.15, Math.min(2.5, config.windowGlow));
+  skylineBuildings.forEach((b) => {
+    // Modulate intensity via emissive / color scaling
+    if (theme === 'night') {
+      const gHex = Math.round(Math.min(255, 255 * glow));
+      b.windowsMat.color.setRGB(gHex / 255, (gHex * 0.95) / 255, (gHex * 0.8) / 255);
+    } else if (theme === 'cyberpunk') {
+      b.windowsMat.color.setRGB(glow, glow, glow);
+    }
+  });
+}
+
+
 interface ThreeCanvasProps {
   agents: Record<AgentId, AgentInfo>;
   activeTask: Task | null;
   cameraView: CameraView;
   theme: LightingTheme;
+  windowConfig: WindowConfig;
   speed: number;
   isPaused: boolean;
   onAgentClick: (agentId: AgentId) => void;
@@ -44,11 +337,138 @@ const _projVec = new THREE.Vector3();
 const _raycaster = new THREE.Raycaster();
 const _pointer = new THREE.Vector2();
 
+// Procedural procedural skyline window textures
+function createSkylineTextures(): {
+  dayTex: THREE.CanvasTexture;
+  sunsetTex: THREE.CanvasTexture;
+  nightTex: THREE.CanvasTexture;
+  cyberTex: THREE.CanvasTexture;
+} {
+  const width = 256;
+  const height = 512;
+
+  // 1. Daylight Texture: Modern silver-blue curtain wall facade
+  const cDay = document.createElement('canvas');
+  cDay.width = width;
+  cDay.height = height;
+  const ctxDay = cDay.getContext('2d');
+  if (ctxDay) {
+    ctxDay.fillStyle = '#9cb6d3';
+    ctxDay.fillRect(0, 0, width, height);
+    for (let y = 0; y < height; y += 16) {
+      ctxDay.fillStyle = '#64748b';
+      ctxDay.fillRect(0, y, width, 3);
+      for (let x = 4; x < width; x += 18) {
+        const isLit = (x * 7 + y * 13) % 5 === 0;
+        ctxDay.fillStyle = isLit ? '#dbeafe' : '#bfdbfe';
+        ctxDay.fillRect(x, y + 3, 14, 11);
+      }
+    }
+  }
+
+  // 2. Sunset Texture: Golden hour warm amber reflection
+  const cSun = document.createElement('canvas');
+  cSun.width = width;
+  cSun.height = height;
+  const ctxSun = cSun.getContext('2d');
+  if (ctxSun) {
+    ctxSun.fillStyle = '#542647';
+    ctxSun.fillRect(0, 0, width, height);
+    for (let y = 0; y < height; y += 16) {
+      ctxSun.fillStyle = '#3b1633';
+      ctxSun.fillRect(0, y, width, 3);
+      for (let x = 4; x < width; x += 18) {
+        const lit = (x * 3 + y * 7) % 4 === 0;
+        ctxSun.fillStyle = lit ? '#fde047' : '#ea580c';
+        ctxSun.fillRect(x, y + 3, 14, 11);
+      }
+    }
+  }
+
+  // 3. Night Texture: Midnight skyline with glowing warm office windows
+  const cNight = document.createElement('canvas');
+  cNight.width = width;
+  cNight.height = height;
+  const ctxNight = cNight.getContext('2d');
+  if (ctxNight) {
+    ctxNight.fillStyle = '#080d1a';
+    ctxNight.fillRect(0, 0, width, height);
+    const nightColors = ['#fef08a', '#fde047', '#fed7aa', '#e0f2fe', '#ffffff'];
+    for (let y = 0; y < height; y += 16) {
+      ctxNight.fillStyle = '#030712';
+      ctxNight.fillRect(0, y, width, 3);
+      for (let x = 4; x < width; x += 18) {
+        const hash = (x * 19 + y * 31 + (x ^ y)) % 100;
+        if (hash < 45) {
+          ctxNight.fillStyle = nightColors[hash % nightColors.length];
+          ctxNight.fillRect(x, y + 3, 14, 11);
+        } else {
+          ctxNight.fillStyle = '#0f172a';
+          ctxNight.fillRect(x, y + 3, 14, 11);
+        }
+      }
+    }
+  }
+
+  // 4. Cyberpunk Texture: Neon grid with electric cyan, magenta, and laser stripes
+  const cCyber = document.createElement('canvas');
+  cCyber.width = width;
+  cCyber.height = height;
+  const ctxCyber = cCyber.getContext('2d');
+  if (ctxCyber) {
+    ctxCyber.fillStyle = '#0a0316';
+    ctxCyber.fillRect(0, 0, width, height);
+    for (let y = 0; y < height; y += 16) {
+      ctxCyber.fillStyle = y % 32 === 0 ? '#ff007f' : '#00e5ff';
+      ctxCyber.fillRect(0, y, width, 2);
+      for (let x = 4; x < width; x += 18) {
+        const hash = (x * 11 + y * 17) % 7;
+        if (hash === 1) {
+          ctxCyber.fillStyle = '#00f0ff';
+          ctxCyber.fillRect(x, y + 2, 14, 12);
+        } else if (hash === 3) {
+          ctxCyber.fillStyle = '#ff2575';
+          ctxCyber.fillRect(x, y + 2, 14, 12);
+        } else if (hash === 5) {
+          ctxCyber.fillStyle = '#a855f7';
+          ctxCyber.fillRect(x, y + 2, 14, 12);
+        } else {
+          ctxCyber.fillStyle = '#1e0836';
+          ctxCyber.fillRect(x, y + 2, 14, 12);
+        }
+      }
+    }
+  }
+
+  const dayTex = new THREE.CanvasTexture(cDay);
+  dayTex.colorSpace = THREE.SRGBColorSpace;
+  dayTex.wrapS = THREE.RepeatWrapping;
+  dayTex.wrapT = THREE.RepeatWrapping;
+
+  const sunsetTex = new THREE.CanvasTexture(cSun);
+  sunsetTex.colorSpace = THREE.SRGBColorSpace;
+  sunsetTex.wrapS = THREE.RepeatWrapping;
+  sunsetTex.wrapT = THREE.RepeatWrapping;
+
+  const nightTex = new THREE.CanvasTexture(cNight);
+  nightTex.colorSpace = THREE.SRGBColorSpace;
+  nightTex.wrapS = THREE.RepeatWrapping;
+  nightTex.wrapT = THREE.RepeatWrapping;
+
+  const cyberTex = new THREE.CanvasTexture(cCyber);
+  cyberTex.colorSpace = THREE.SRGBColorSpace;
+  cyberTex.wrapS = THREE.RepeatWrapping;
+  cyberTex.wrapT = THREE.RepeatWrapping;
+
+  return { dayTex, sunsetTex, nightTex, cyberTex };
+}
+
 export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   agents,
   activeTask,
   cameraView,
   theme,
+  windowConfig,
   speed,
   isPaused,
   onAgentClick,
@@ -59,11 +479,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
-  const lightsRef = useRef<{
-    sun: THREE.DirectionalLight;
-    hemi: THREE.HemisphereLight;
-    deskLamps: THREE.PointLight[];
-  } | null>(null);
+  const themeRigRef = useRef<ThemeRig | null>(null);
 
   // Store latest props in refs for animation loop
   const propsRef = useRef({
@@ -71,6 +487,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     activeTask,
     cameraView,
     theme,
+    windowConfig,
     speed,
     isPaused,
     onAgentClick,
@@ -83,12 +500,21 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       activeTask,
       cameraView,
       theme,
+      windowConfig,
       speed,
       isPaused,
       onAgentClick,
       onUpdateScreenCoords,
     };
   });
+
+  // Dynamically update 3D lights, glass, and skyline whenever theme or windowConfig changes
+  useEffect(() => {
+    if (themeRigRef.current) {
+      applyThemeToRig(themeRigRef.current, theme, windowConfig);
+    }
+  }, [theme, windowConfig]);
+
 
   // Setup Three.js scene
   useEffect(() => {
@@ -151,13 +577,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     sun.shadow.camera.bottom = -10;
     scene.add(sun);
 
-    const deskLamps: THREE.PointLight[] = [];
-
-    lightsRef.current = {
-      sun,
-      hemi: hemiLight,
-      deskLamps,
-    };
+    const deskLamps: DeskLampData[] = [];
 
     // Shared procedural materials
     const matWood = new THREE.MeshStandardMaterial({
@@ -219,83 +639,255 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
     rug.receiveShadow = !isHeadless;
     scene.add(rug);
 
-    // Back Wall
-    const backWall = new THREE.Mesh(new THREE.BoxGeometry(36, 8, 0.3), matWall);
-    backWall.position.set(0, 4, -5.6);
-    backWall.receiveShadow = !isHeadless;
-    scene.add(backWall);
+    // Initialize Procedural Skyline Window Textures
+    const textures = createSkylineTextures();
 
-    // Baseboard
-    const baseboard = new THREE.Mesh(new THREE.BoxGeometry(36, 0.25, 0.35), matBaseboard);
-    baseboard.position.set(0, 0.125, -5.55);
-    scene.add(baseboard);
+    // Structural Side Wall Pillars (Left & Right framing the panoramic view)
+    const leftWall = new THREE.Mesh(new THREE.BoxGeometry(6.5, 8, 0.4), matWall);
+    leftWall.position.set(-13, 4, -5.6);
+    leftWall.receiveShadow = !isHeadless;
+    scene.add(leftWall);
 
-    // Left Panoramic Window Frame
-    const windowFrame = new THREE.Mesh(new THREE.BoxGeometry(4.8, 3.2, 0.15), matMetal);
-    windowFrame.position.set(-8.5, 4.2, -5.4);
-    scene.add(windowFrame);
+    const leftBaseboard = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.25, 0.35), matBaseboard);
+    leftBaseboard.position.set(-13, 0.125, -5.55);
+    scene.add(leftBaseboard);
 
-    // Window Glass with daylight sky tint
-    const windowGlass = new THREE.Mesh(new THREE.PlaneGeometry(4.5, 2.9), new THREE.MeshBasicMaterial({
-      color: 0xafe0ff,
-    }));
-    windowGlass.position.set(-8.5, 4.2, -5.3);
-    scene.add(windowGlass);
+    const rightWall = new THREE.Mesh(new THREE.BoxGeometry(6.5, 8, 0.4), matWall);
+    rightWall.position.set(13, 4, -5.6);
+    rightWall.receiveShadow = !isHeadless;
+    scene.add(rightWall);
 
-    // Distant skyscraper silhouettes seen through window
-    const skyGroup = new THREE.Group();
-    skyGroup.position.set(-8.5, 3.2, -5.25);
-    [-1.5, -0.6, 0.4, 1.4].forEach((x, idx) => {
-      const h = 1.2 + (idx % 3) * 0.5;
-      const b = new THREE.Mesh(
-        new THREE.BoxGeometry(0.65, h, 0.02),
-        new THREE.MeshBasicMaterial({ color: 0x93bfe6 })
-      );
-      b.position.set(x, h / 2, 0);
-      skyGroup.add(b);
-    });
-    scene.add(skyGroup);
+    const rightBaseboard = new THREE.Mesh(new THREE.BoxGeometry(6.5, 0.25, 0.35), matBaseboard);
+    rightBaseboard.position.set(13, 0.125, -5.55);
+    scene.add(rightBaseboard);
 
-    // Window crossbar mullions
-    const mullionV = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.9, 0.05), matMetal);
-    mullionV.position.set(-8.5, 4.2, -5.28);
-    scene.add(mullionV);
-    const mullionH = new THREE.Mesh(new THREE.BoxGeometry(4.5, 0.08, 0.05), matMetal);
-    mullionH.position.set(-8.5, 4.2, -5.28);
-    scene.add(mullionH);
-
-    // Kanban Whiteboard on Back Wall - framed comfortably within view
+    // Kanban Whiteboard mounted neatly on the right structural wall pillar
     const boardGroup = new THREE.Group();
-    boardGroup.position.set(6.2, 4.2, -5.4);
-    const boardBack = new THREE.Mesh(new THREE.BoxGeometry(4.2, 2.6, 0.1), matWhite);
+    boardGroup.position.set(12.2, 4.2, -5.35);
+    const boardBack = new THREE.Mesh(new THREE.BoxGeometry(4.0, 2.5, 0.08), matWhite);
     boardBack.castShadow = !isHeadless;
     boardGroup.add(boardBack);
 
-    // Header strip
-    const boardHeader = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.3, 0.12), new THREE.MeshStandardMaterial({
-      color: 0x4a4d65,
-      roughness: 0.5,
-    }));
-    boardHeader.position.set(0, 1.05, 0.02);
+    const boardHeader = new THREE.Mesh(
+      new THREE.BoxGeometry(3.9, 0.28, 0.1),
+      new THREE.MeshStandardMaterial({ color: 0x4a4d65, roughness: 0.5 })
+    );
+    boardHeader.position.set(0, 1.0, 0.02);
     boardGroup.add(boardHeader);
 
     // 3 Kanban Columns Sticky Notes (Plan, In Progress, Done)
     const colColors = [0xffd166, 0x6ab0ff, 0x70e0a0];
-    const colLabels = [-1.3, 0, 1.3];
+    const colLabels = [-1.2, 0, 1.2];
     colLabels.forEach((x, colIdx) => {
       for (let row = 0; row < 3; row++) {
         const note = new THREE.Mesh(
-          new THREE.BoxGeometry(0.7, 0.45, 0.03),
+          new THREE.BoxGeometry(0.65, 0.42, 0.025),
           new THREE.MeshStandardMaterial({
             color: colColors[colIdx],
             roughness: 0.7,
           })
         );
-        note.position.set(x + (Math.random() - 0.5) * 0.05, 0.5 - row * 0.55, 0.06);
+        note.position.set(x + (Math.random() - 0.5) * 0.05, 0.45 - row * 0.52, 0.05);
         boardGroup.add(note);
       }
     });
     scene.add(boardGroup);
+
+    // --- LARGE PANORAMIC GLASS CURTAIN WALL (Directly facing agent desks & laptops) ---
+    const matMullion = new THREE.MeshStandardMaterial({
+      color: 0x1f232d,
+      roughness: 0.3,
+      metalness: 0.85,
+    });
+
+    const panoramicGlassMat = new THREE.MeshPhysicalMaterial({
+      color: 0xbbe4ff,
+      roughness: 0.04,
+      metalness: 0.1,
+      transmission: isHeadless ? 0 : 0.85,
+      ior: 1.5,
+      transparent: true,
+      opacity: propsRef.current.windowConfig.glassOpacity,
+      depthWrite: false,
+      reflectivity: 0.9,
+    });
+
+    const glassPane = new THREE.Mesh(new THREE.PlaneGeometry(19.5, 7.6), panoramicGlassMat);
+    glassPane.position.set(0, 3.9, -5.58);
+    scene.add(glassPane);
+
+    // Structural Aluminum Mullions
+    const headerBeam = new THREE.Mesh(new THREE.BoxGeometry(19.6, 0.35, 0.26), matMullion);
+    headerBeam.position.set(0, 7.6, -5.55);
+    scene.add(headerBeam);
+
+    const sillBeam = new THREE.Mesh(new THREE.BoxGeometry(19.6, 0.35, 0.26), matMullion);
+    sillBeam.position.set(0, 0.175, -5.55);
+    scene.add(sillBeam);
+
+    // Vertical structural mullions every 3.25 meters
+    [-9.75, -6.5, -3.25, 0, 3.25, 6.5, 9.75].forEach((mx) => {
+      const vMullion = new THREE.Mesh(new THREE.BoxGeometry(0.12, 7.6, 0.18), matMullion);
+      vMullion.position.set(mx, 3.9, -5.55);
+      scene.add(vMullion);
+    });
+
+    // Horizontal transoms
+    [2.45, 5.1].forEach((my) => {
+      const hMullion = new THREE.Mesh(new THREE.BoxGeometry(19.5, 0.1, 0.16), matMullion);
+      hMullion.position.set(0, my, -5.55);
+      scene.add(hMullion);
+    });
+
+    // Window sill architectural ambient LED accent strip
+    const windowLedgeLedMat = new THREE.MeshBasicMaterial({
+      color: 0x93c5fd,
+    });
+    const ledgeLed = new THREE.Mesh(new THREE.BoxGeometry(19.5, 0.04, 0.04), windowLedgeLedMat);
+    ledgeLed.position.set(0, 0.36, -5.52);
+    scene.add(ledgeLed);
+
+    // Exterior balcony terrace beyond glass
+    const ledgeBalcony = new THREE.Mesh(
+      new THREE.BoxGeometry(22, 0.3, 3.2),
+      new THREE.MeshStandardMaterial({ color: 0x222630, roughness: 0.85 })
+    );
+    ledgeBalcony.position.set(0, -0.15, -7.1);
+    scene.add(ledgeBalcony);
+
+    // Balustrade safety railing along the terrace perimeter
+    const railingTop = new THREE.Mesh(new THREE.BoxGeometry(22, 0.08, 0.08), matMullion);
+    railingTop.position.set(0, 0.85, -8.6);
+    scene.add(railingTop);
+
+    [-9.5, -5.5, -1.5, 2.5, 6.5, 10.5].forEach((rx) => {
+      const post = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.85, 8), matMullion);
+      post.position.set(rx, 0.425, -8.6);
+      scene.add(post);
+    });
+
+    // --- PROCEDURAL 3D SKYSCRAPER METROPOLIS CLUSTER ---
+    const skylineBuildings: SkylineBuildingData[] = [];
+    const rooftopBeaconMats: THREE.MeshBasicMaterial[] = [];
+
+    const SKYSCRAPERS_CFG = [
+      // Near High-Rises (crisp details directly visible across the desks)
+      { x: -6.8, z: -10.5, w: 3.8, h: 14, d: 4.0, setback: 10, antenna: true, helipad: false, baseCol: 0x94a3b8, sunsetCol: 0x5a2d48, nightCol: 0x0f172a, cyberCol: 0x160829 },
+      { x: -3.2, z: -12.0, w: 3.4, h: 18, d: 3.6, setback: 13, antenna: true, helipad: false, baseCol: 0x859bb0, sunsetCol: 0x542646, nightCol: 0x111c33, cyberCol: 0x1e0b35 },
+      { x: 0.8, z: -11.5, w: 3.6, h: 16, d: 3.8, setback: 11, antenna: false, helipad: true, baseCol: 0x9ca3af, sunsetCol: 0x613251, nightCol: 0x131f38, cyberCol: 0x220c3d },
+      { x: 4.6, z: -10.2, w: 3.2, h: 13, d: 3.5, setback: 9, antenna: true, helipad: false, baseCol: 0x8b9bb4, sunsetCol: 0x502844, nightCol: 0x0e172a, cyberCol: 0x18092d },
+      { x: 8.2, z: -11.8, w: 4.2, h: 15, d: 4.2, setback: 11, antenna: false, helipad: false, baseCol: 0x93a3b8, sunsetCol: 0x5a2d48, nightCol: 0x101b30, cyberCol: 0x1c0a33 },
+
+      // Mid-Tier Skyline (soaring corporate towers)
+      { x: -9.5, z: -16.0, w: 4.5, h: 21, d: 4.5, setback: 16, antenna: true, helipad: false, baseCol: 0x7e94ac, sunsetCol: 0x481f3d, nightCol: 0x0c1322, cyberCol: 0x140624 },
+      { x: -5.5, z: -17.5, w: 4.2, h: 26, d: 4.4, setback: 19, antenna: true, helipad: false, baseCol: 0x768ca5, sunsetCol: 0x421937, nightCol: 0x0a101d, cyberCol: 0x120520 },
+      { x: -1.2, z: -16.8, w: 4.0, h: 23, d: 4.2, setback: 17, antenna: true, helipad: false, baseCol: 0x7b91aa, sunsetCol: 0x461d3b, nightCol: 0x0b1220, cyberCol: 0x130622 },
+      { x: 2.8, z: -18.0, w: 4.6, h: 27, d: 4.6, setback: 20, antenna: true, helipad: false, baseCol: 0x7389a2, sunsetCol: 0x3f1634, nightCol: 0x090e1a, cyberCol: 0x10041d },
+      { x: 6.8, z: -16.5, w: 4.0, h: 22, d: 4.2, setback: 16, antenna: false, helipad: true, baseCol: 0x7a90a9, sunsetCol: 0x451c3a, nightCol: 0x0a111f, cyberCol: 0x120521 },
+      { x: 10.8, z: -17.0, w: 4.4, h: 20, d: 4.5, setback: 15, antenna: true, helipad: false, baseCol: 0x7c92ab, sunsetCol: 0x471e3c, nightCol: 0x0c1322, cyberCol: 0x140624 },
+
+      // Distant Towers & Dense Horizon
+      { x: -14.0, z: -23.0, w: 5.0, h: 22, d: 5.0, setback: 0, antenna: false, helipad: false, baseCol: 0x6c819a, sunsetCol: 0x3b1431, nightCol: 0x070b15, cyberCol: 0x0e0319 },
+      { x: -8.0, z: -24.0, w: 5.2, h: 28, d: 5.2, setback: 22, antenna: true, helipad: false, baseCol: 0x667b94, sunsetCol: 0x37112d, nightCol: 0x060912, cyberCol: 0x0c0216 },
+      { x: -3.5, z: -25.5, w: 5.5, h: 32, d: 5.5, setback: 24, antenna: true, helipad: false, baseCol: 0x627790, sunsetCol: 0x340f2a, nightCol: 0x050810, cyberCol: 0x0b0214 },
+      { x: 0.5, z: -24.5, w: 5.0, h: 30, d: 5.0, setback: 23, antenna: true, helipad: false, baseCol: 0x647992, sunsetCol: 0x35102b, nightCol: 0x060911, cyberCol: 0x0c0215 },
+      { x: 5.0, z: -26.0, w: 5.6, h: 33, d: 5.6, setback: 25, antenna: true, helipad: false, baseCol: 0x60758e, sunsetCol: 0x320e28, nightCol: 0x05070e, cyberCol: 0x0a0113 },
+      { x: 9.5, z: -24.0, w: 5.2, h: 27, d: 5.2, setback: 21, antenna: false, helipad: false, baseCol: 0x657a93, sunsetCol: 0x36112c, nightCol: 0x060912, cyberCol: 0x0c0216 },
+      { x: 14.5, z: -23.5, w: 5.0, h: 23, d: 5.0, setback: 0, antenna: false, helipad: false, baseCol: 0x6a7f98, sunsetCol: 0x3a1330, nightCol: 0x070a14, cyberCol: 0x0d0318 },
+      { x: -18.0, z: -22.0, w: 5.5, h: 20, d: 5.5, setback: 0, antenna: false, helipad: false, baseCol: 0x6f849d, sunsetCol: 0x3d1633, nightCol: 0x080c16, cyberCol: 0x0f041b },
+      { x: 18.0, z: -22.0, w: 5.5, h: 20, d: 5.5, setback: 0, antenna: false, helipad: false, baseCol: 0x6f849d, sunsetCol: 0x3d1633, nightCol: 0x080c16, cyberCol: 0x0f041b },
+    ];
+
+    SKYSCRAPERS_CFG.forEach((bCfg) => {
+      const bGroup = new THREE.Group();
+      bGroup.position.set(bCfg.x, 0, bCfg.z);
+
+      const facadeMat = new THREE.MeshStandardMaterial({
+        color: bCfg.baseCol,
+        roughness: 0.55,
+        metalness: 0.25,
+      });
+
+      const windowsMat = new THREE.MeshBasicMaterial({
+        map: textures.dayTex,
+        color: 0xffffff,
+      });
+
+      // Main lower tower body
+      const mainH = bCfg.setback > 0 ? bCfg.setback : bCfg.h;
+      const mainBody = new THREE.Mesh(new THREE.BoxGeometry(bCfg.w, mainH, bCfg.d), facadeMat);
+      mainBody.position.y = mainH / 2;
+      bGroup.add(mainBody);
+
+      // Window facade front plane
+      const frontWin = new THREE.Mesh(new THREE.PlaneGeometry(bCfg.w * 0.94, mainH * 0.96), windowsMat);
+      frontWin.position.set(0, mainH / 2, bCfg.d / 2 + 0.02);
+      bGroup.add(frontWin);
+
+      // Setback upper tower tier (for tall high-rises)
+      if (bCfg.setback > 0) {
+        const topH = bCfg.h - bCfg.setback;
+        const topW = bCfg.w * 0.74;
+        const topD = bCfg.d * 0.74;
+
+        const topBody = new THREE.Mesh(new THREE.BoxGeometry(topW, topH, topD), facadeMat);
+        topBody.position.y = bCfg.setback + topH / 2;
+        bGroup.add(topBody);
+
+        const topWin = new THREE.Mesh(new THREE.PlaneGeometry(topW * 0.94, topH * 0.94), windowsMat);
+        topWin.position.set(0, bCfg.setback + topH / 2, topD / 2 + 0.02);
+        bGroup.add(topWin);
+      }
+
+      // Rooftop Features: Spire Antennas with glowing beacons
+      if (bCfg.antenna) {
+        const spireH = 3.6;
+        const spire = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.04, 0.08, spireH, 8),
+          matMetal
+        );
+        spire.position.set(0, bCfg.h + spireH / 2, 0);
+        bGroup.add(spire);
+
+        const beaconMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+        rooftopBeaconMats.push(beaconMat);
+
+        const beacon = new THREE.Mesh(new THREE.SphereGeometry(0.14, 8, 8), beaconMat);
+        beacon.position.set(0, bCfg.h + spireH, 0);
+        bGroup.add(beacon);
+      }
+
+      // Rooftop Features: Helipad
+      if (bCfg.helipad) {
+        const helipad = new THREE.Mesh(
+          new THREE.CylinderGeometry(1.2, 1.2, 0.08, 16),
+          new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.7 })
+        );
+        helipad.position.set(0, bCfg.h + 0.04, 0);
+        bGroup.add(helipad);
+
+        const hMark = new THREE.Mesh(
+          new THREE.BoxGeometry(0.65, 0.02, 0.65),
+          new THREE.MeshBasicMaterial({ color: 0xfacc15 })
+        );
+        hMark.position.set(0, bCfg.h + 0.09, 0);
+        bGroup.add(hMark);
+      }
+
+      scene.add(bGroup);
+
+      skylineBuildings.push({
+        facadeMesh: mainBody,
+        facadeMat,
+        windowsMesh: frontWin,
+        windowsMat,
+        baseColor: bCfg.baseCol,
+        sunsetColor: bCfg.sunsetCol,
+        nightColor: bCfg.nightCol,
+        cyberColor: bCfg.cyberCol,
+      });
+    });
+
 
     // Indoor Foliage / Plant Corner
     const plantGroup = new THREE.Group();
@@ -458,6 +1050,109 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       );
       mug.position.set(-0.8, 1.2, 0.2);
       deskGroup.add(mug);
+
+      // Architectural Desk Lamp with functional 3D lighting around agent
+      const lampGroup = new THREE.Group();
+      lampGroup.position.set(-1.08, 1.11, -0.2);
+      deskGroup.add(lampGroup);
+
+      // Lamp heavy circular metal base
+      const lampBase = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.16, 0.035, 16),
+        matMetal
+      );
+      lampBase.position.y = 0.017;
+      lampBase.castShadow = !isHeadless;
+      lampGroup.add(lampBase);
+
+      // Lower articulated stem
+      const lowerArmPivot = new THREE.Group();
+      lowerArmPivot.position.set(0, 0.035, 0);
+      lampGroup.add(lowerArmPivot);
+
+      const lowerArm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.02, 0.02, 0.52, 10),
+        matMetal
+      );
+      lowerArm.position.set(0.09, 0.24, 0.06);
+      lowerArm.rotation.z = -0.34;
+      lowerArm.rotation.x = 0.18;
+      lowerArm.castShadow = !isHeadless;
+      lowerArmPivot.add(lowerArm);
+
+      // Elbow hinge
+      const elbow = new THREE.Mesh(
+        new THREE.SphereGeometry(0.045, 12, 12),
+        matMetal
+      );
+      elbow.position.set(0.18, 0.47, 0.11);
+      lowerArmPivot.add(elbow);
+
+      // Upper arm extending over workstation
+      const upperArm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.018, 0.46, 10),
+        matMetal
+      );
+      upperArm.position.set(0.35, 0.52, 0.09);
+      upperArm.rotation.z = 0.7;
+      upperArm.rotation.x = -0.12;
+      upperArm.castShadow = !isHeadless;
+      lowerArmPivot.add(upperArm);
+
+      // Lamp cone reflector shade pointing downward towards keyboard & desk surface
+      const lampShade = new THREE.Mesh(
+        new THREE.ConeGeometry(0.19, 0.22, 16, 1, true),
+        new THREE.MeshStandardMaterial({
+          color: 0x222634,
+          roughness: 0.35,
+          metalness: 0.75,
+          side: THREE.DoubleSide,
+        })
+      );
+      lampShade.position.set(0.54, 0.44, 0.08);
+      lampShade.rotation.x = Math.PI; // Opening faces down
+      lowerArmPivot.add(lampShade);
+
+      // Glowing bulb mesh inside the lamp shade
+      const bulbMat = new THREE.MeshBasicMaterial({ color: 0x8a92a0 });
+      const bulbMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(0.075, 16, 14),
+        bulbMat
+      );
+      bulbMesh.position.set(0.54, 0.41, 0.08);
+      lowerArmPivot.add(bulbMesh);
+
+      // Functional PointLight providing 3D radiant illumination around the agent
+      const lampLight = new THREE.PointLight(0xffe2a4, 0, 8.0, 1.35);
+      lampLight.position.set(0.54, 0.37, 0.08);
+      if (!isHeadless) {
+        lampLight.castShadow = true;
+        lampLight.shadow.bias = -0.001;
+      }
+      lowerArmPivot.add(lampLight);
+
+      // Radial ground illumination halo on the desk
+      const haloDiscMat = new THREE.MeshBasicMaterial({
+        color: 0xffe2a4,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      });
+      const haloDisc = new THREE.Mesh(
+        new THREE.CircleGeometry(0.9, 24),
+        haloDiscMat
+      );
+      haloDisc.rotation.x = -Math.PI / 2;
+      haloDisc.position.set(0.54, 0.006, 0.08);
+      lampGroup.add(haloDisc);
+
+      deskLamps.push({
+        light: lampLight,
+        bulbMesh,
+        bulbMat,
+        haloDisc,
+        agentId: cfg.id,
+      });
 
       // Swivel Chair
       const chairGroup = new THREE.Group();
@@ -641,6 +1336,27 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
     agentMeshMapRef.current = agentMeshMap;
 
+    // Initialize Theme Lighting Rig with panoramic glass, dynamic skyline, and lamps
+    themeRigRef.current = {
+      sun,
+      hemi: hemiLight,
+      deskLamps,
+      panoramicGlassMat,
+      windowLedgeLedMat,
+      skylineBuildings,
+      rooftopBeaconMats,
+      scene,
+      renderer,
+      baseNearFog: 24,
+      baseFarFog: 68,
+      dayTex: textures.dayTex,
+      sunsetTex: textures.sunsetTex,
+      nightTex: textures.nightTex,
+      cyberTex: textures.cyberTex,
+    };
+    applyThemeToRig(themeRigRef.current, propsRef.current.theme, propsRef.current.windowConfig);
+
+
     // Handle Window Resize with responsive FOV
     const handleResize = () => {
       if (!container || !rendererRef.current || !cameraRef.current) return;
@@ -696,39 +1412,6 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
 
       const effectiveDt = paused ? 0 : delta * simSpeed;
       const elapsed = clock.elapsedTime;
-
-      // Update Lighting / Theme Colors smoothly
-      if (lightsRef.current && sceneRef.current) {
-        if (curTheme === 'daylight') {
-          sceneRef.current.background = new THREE.Color(0xdde8fc);
-          sceneRef.current.fog = new THREE.Fog(0xdde8fc, 18, 48);
-          lightsRef.current.sun.color.setHex(0xfff6ea);
-          lightsRef.current.sun.intensity = 1.2;
-          lightsRef.current.hemi.color.setHex(0xffffff);
-          lightsRef.current.hemi.groundColor.setHex(0xc0ccdf);
-        } else if (curTheme === 'sunset') {
-          sceneRef.current.background = new THREE.Color(0xf6d4be);
-          sceneRef.current.fog = new THREE.Fog(0xf6d4be, 16, 42);
-          lightsRef.current.sun.color.setHex(0xff9e6d);
-          lightsRef.current.sun.intensity = 1.4;
-          lightsRef.current.hemi.color.setHex(0xffe2c7);
-          lightsRef.current.hemi.groundColor.setHex(0xa36872);
-        } else if (curTheme === 'night') {
-          sceneRef.current.background = new THREE.Color(0x0a0f1d);
-          sceneRef.current.fog = new THREE.Fog(0x0a0f1d, 15, 40);
-          lightsRef.current.sun.color.setHex(0x7ca1d9);
-          lightsRef.current.sun.intensity = 0.55;
-          lightsRef.current.hemi.color.setHex(0x1a263d);
-          lightsRef.current.hemi.groundColor.setHex(0x080b14);
-        } else if (curTheme === 'cyberpunk') {
-          sceneRef.current.background = new THREE.Color(0x131224);
-          sceneRef.current.fog = new THREE.Fog(0x131224, 15, 38);
-          lightsRef.current.sun.color.setHex(0x00f0ff);
-          lightsRef.current.sun.intensity = 0.9;
-          lightsRef.current.hemi.color.setHex(0xb249f8);
-          lightsRef.current.hemi.groundColor.setHex(0x110926);
-        }
-      }
 
       // Camera target positions based on cameraView
       const targetCamPos = _vecA;
@@ -877,9 +1560,11 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           agent.head.rotation.z *= 0.9;
         }
 
-        // Monitor screen glow pulsing
-        const glowFactor = isTyping ? 0.75 + Math.sin(elapsed * 9) * 0.25 : 0.4;
-        agent.screenGlowMat.color.setHex(info.colorHex).multiplyScalar(glowFactor);
+        // Monitor screen glow pulsing with theme atmosphere amplification
+        const baseGlow = isTyping ? 0.75 + Math.sin(elapsed * 9) * 0.25 : 0.45;
+        const currentTheme = propsRef.current.theme;
+        const themeMultiplier = currentTheme === 'night' ? 1.6 : currentTheme === 'cyberpunk' ? 2.2 : 1.0;
+        agent.screenGlowMat.color.setHex(info.colorHex).multiplyScalar(baseGlow * themeMultiplier);
 
         // Calculate 2D Screen projection for speech bubble
         if (cameraRef.current && container) {
@@ -909,6 +1594,7 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
       cancelAnimationFrame(animFrameId);
       window.removeEventListener('resize', handleResize);
       container.removeEventListener('pointerdown', handlePointerDown);
+      themeRigRef.current = null;
       renderer.dispose();
     };
   }, []);

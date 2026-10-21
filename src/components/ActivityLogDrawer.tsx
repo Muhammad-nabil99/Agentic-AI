@@ -105,26 +105,26 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
       case 'critical':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-100 dark:bg-rose-950/60 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-900">
-            <Flame className="w-2.5 h-2.5" /> Kritis
+            <Flame className="w-2.5 h-2.5" /> Critical
           </span>
         );
       case 'high':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-900">
-            Tinggi
+            High
           </span>
         );
       case 'medium':
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900">
-            Sedang
+            Medium
           </span>
         );
       case 'low':
       default:
         return (
           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
-            Rendah
+            Low
           </span>
         );
     }
@@ -142,16 +142,16 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
   const getStageTitle = (status: Task['status']) => {
     switch (status) {
       case 'planning':
-        return 'Tahap 1: Analisis & Spesifikasi (Planner)';
+        return 'Stage 1: Architecture & Specs (Planner)';
       case 'coding':
-        return 'Tahap 2: Implementasi & Testing (Coder)';
+        return 'Stage 2: Implementation & Tests (Coder)';
       case 'reviewing':
-        return 'Tahap 3: QA & Security Audit (Reviewer)';
+        return 'Stage 3: QA & Security Audit (Reviewer)';
       case 'completed':
-        return 'Tahap Selesai: Deployed to Main';
+        return 'Stage Complete: Deployed to Main';
       case 'queued':
       default:
-        return 'Dalam Antrean';
+        return 'In Queue';
     }
   };
 
@@ -165,13 +165,13 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
           </div>
           <div>
             <h2 className="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <span>Aktivitas & Alur Kerja</span>
+              <span>Activity & Workflow</span>
               <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800">
                 Live Audit
               </span>
             </h2>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">
-              Filter kerja tiap-tiap agent & monitor tugas real-time
+              Filter agent work & monitor sprint pipelines in real time
             </p>
           </div>
         </div>
@@ -187,8 +187,8 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
-                title="Tema Pagi (Daylight)"
-                aria-label="Set daylight theme"
+                title="Morning Theme (Daylight)"
+                aria-label="Set morning theme"
               >
                 <Sun className="w-3.5 h-3.5" />
               </button>
@@ -199,7 +199,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-orange-500 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
-                title="Tema Sore (Sunset)"
+                title="Sunset Theme (Golden Hour)"
                 aria-label="Set sunset theme"
               >
                 <Sunset className="w-3.5 h-3.5" />
@@ -211,7 +211,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-sky-400 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
-                title="Tema Malam (Night)"
+                title="Night Theme (Desk Lamps On)"
                 aria-label="Set night theme"
               >
                 <Moon className="w-3.5 h-3.5" />
@@ -223,7 +223,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-xs'
                     : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
                 }`}
-                title="Tema Cyberpunk (Neon)"
+                title="Cyberpunk Theme (Neon Glow)"
                 aria-label="Set cyberpunk theme"
               >
                 <Sparkles className="w-3.5 h-3.5" />
@@ -235,7 +235,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
             <button
               onClick={onClearLogs}
               className="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 px-2 py-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              title="Bersihkan log"
+              title="Clear logs"
             >
               Clear
             </button>
@@ -243,7 +243,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
           <button
             onClick={onClose}
             className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
-            aria-label="Tutup panel aktivitas"
+            aria-label="Close activity panel"
           >
             <X className="w-5 h-5" />
           </button>
@@ -255,7 +255,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 flex items-center gap-1.5">
             <Filter className="w-3 h-3 text-indigo-500" />
-            <span>Filter Antar Kerja:</span>
+            <span>Workflow Filter:</span>
           </span>
           {selectedFilter !== 'all' && (
             <button
@@ -277,7 +277,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                 : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700/70 border border-slate-200 dark:border-slate-700'
               }`}
           >
-            <span>Semua</span>
+            <span>All</span>
             <span
               className={`text-[10px] px-1.5 py-0.2 rounded-full ${selectedFilter === 'all'
                   ? 'bg-indigo-700 text-indigo-100'
@@ -335,7 +335,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
               }`}
           >
             <span>🤝</span>
-            <span>Handoff Antar Agent</span>
+            <span>Inter-Agent Handoffs</span>
           </button>
         </div>
       </div>
@@ -377,9 +377,9 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                         }}
                       >
                         {isAgentActiveOnCurrentTask(selectedAgent.id)
-                          ? '⚡ Sedang Bekerja'
+                          ? '⚡ Working'
                           : activeTask
-                            ? '⏳ Menunggu Giliran'
+                            ? '⏳ In Queue'
                             : '☕ Standby'}
                       </span>
                     </div>
@@ -393,10 +393,10 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                   <button
                     onClick={() => onFocusAgent(selectedAgent.id)}
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 transition-all shadow-xs shrink-0"
-                    title="Lihat agent di 3D viewport"
+                    title="Focus agent in 3D viewport"
                   >
                     <Camera className="w-3.5 h-3.5 text-indigo-500" />
-                    <span>Fokus 3D</span>
+                    <span>Focus 3D</span>
                   </button>
                 )}
               </div>
@@ -404,7 +404,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
               {/* Speech & Live Action */}
               <div className="mt-3 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-700/60 text-xs">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                  Aksi Terkini:
+                  Current Action:
                 </span>
                 <p className="font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
                   <span>💬</span>
@@ -415,7 +415,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
               {/* Agent Performance Metric Badges */}
               <div className="grid grid-cols-3 gap-2 mt-2.5">
                 <div className="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-center">
-                  <span className="text-[10px] text-slate-500 block">Task Selesai</span>
+                  <span className="text-[10px] text-slate-500 block">Tasks Done</span>
                   <span className="text-xs font-extrabold text-slate-900 dark:text-white">
                     {selectedAgent.tasksCompleted}
                   </span>
@@ -429,21 +429,21 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                   </div>
                 ) : selectedAgent.id === 'reviewer' ? (
                   <div className="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-center">
-                    <span className="text-[10px] text-slate-500 block">Review Dilakukan</span>
+                    <span className="text-[10px] text-slate-500 block">Reviews Done</span>
                     <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
                       {selectedAgent.reviewsCompleted}
                     </span>
                   </div>
                 ) : (
                   <div className="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-center">
-                    <span className="text-[10px] text-slate-500 block">Spesifikasi</span>
+                    <span className="text-[10px] text-slate-500 block">Specs Authored</span>
                     <span className="text-xs font-extrabold text-rose-600 dark:text-rose-400">
                       {selectedAgent.tasksCompleted + (activeTask ? 1 : 0)}
                     </span>
                   </div>
                 )}
                 <div className="bg-white/80 dark:bg-slate-900/80 p-2 rounded-xl border border-slate-200/50 dark:border-slate-700/50 text-center">
-                  <span className="text-[10px] text-slate-500 block">Log Terkait</span>
+                  <span className="text-[10px] text-slate-500 block">Related Logs</span>
                   <span className="text-xs font-extrabold text-indigo-600 dark:text-indigo-400">
                     {filteredLogs.length}
                   </span>
@@ -451,19 +451,19 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
               </div>
             </div>
 
-            {/* CURRENT TASK (Tugas Saat Ini) */}
+            {/* CURRENT TASK */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-xs">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-1.5">
                   <Sparkles className="w-4 h-4 text-amber-500" />
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    Current Task (Tugas Saat Ini)
+                    Current Active Task
                   </h4>
                 </div>
                 {activeTask && isAgentActiveOnCurrentTask(selectedAgent.id) && (
                   <span className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 animate-pulse">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                    Aktif di Meja {selectedAgent.name}
+                    Active at {selectedAgent.name}'s Desk
                   </span>
                 )}
               </div>
@@ -542,26 +542,26 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                     <Clock className="w-4 h-4" />
                   </div>
                   <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                    Tidak ada task yang sedang berjalan
+                    No sprint tasks currently in progress
                   </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Agent {selectedAgent.name} sedang standby menunggu sprint berikutnya.
+                    Agent {selectedAgent.name} is on standby waiting for the next sprint.
                   </p>
                 </div>
               )}
             </div>
 
-            {/* LIST TASK (Daftar Task Pipeline) */}
+            {/* LIST TASK */}
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 shadow-xs">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-1.5">
                   <ListTodo className="w-4 h-4 text-indigo-500" />
                   <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                    List Task ({selectedAgent.name})
+                    Task Pipelines ({selectedAgent.name})
                   </h4>
                 </div>
 
-                {/* Sub tabs: Antrean vs Selesai */}
+                {/* Sub tabs: Queued vs Completed */}
                 <div className="flex items-center gap-1 p-0.5 rounded-lg bg-slate-200/80 dark:bg-slate-700/80 text-[10px]">
                   <button
                     onClick={() => setTaskListTab('queue')}
@@ -570,7 +570,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                       }`}
                   >
-                    Antrean ({taskQueue.length})
+                    Queued ({taskQueue.length})
                   </button>
                   <button
                     onClick={() => setTaskListTab('completed')}
@@ -579,7 +579,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                         : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
                       }`}
                   >
-                    Selesai ({completedTasks.length})
+                    Completed ({completedTasks.length})
                   </button>
                 </div>
               </div>
@@ -589,7 +589,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
                   {taskQueue.length === 0 ? (
                     <div className="text-center py-6 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-xs text-slate-400">
-                      Antrean task kosong. Tambahkan task baru untuk memulai alur kerja!
+                      Task queue is empty. Add a new sprint task to begin!
                     </div>
                   ) : (
                     taskQueue.map((task, idx) => (
@@ -612,8 +612,8 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                           {task.description}
                         </p>
                         <div className="flex items-center justify-between mt-2 pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px] text-slate-400">
-                          <span>Alur: Planner ➔ Coder ➔ Reviewer</span>
-                          <span className="font-mono">Menunggu giliran</span>
+                          <span>Flow: Planner ➔ Coder ➔ Reviewer</span>
+                          <span className="font-mono">Waiting in queue</span>
                         </div>
                       </div>
                     ))
@@ -623,7 +623,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                 <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
                   {completedTasks.length === 0 ? (
                     <div className="text-center py-6 bg-white dark:bg-slate-900 rounded-xl border border-dashed border-slate-200 dark:border-slate-700 text-xs text-slate-400">
-                      Belum ada task yang diselesaikan. Task yang telah di-deploy akan muncul di sini!
+                      No tasks completed yet. Completed and deployed sprints will appear here!
                     </div>
                   ) : (
                     completedTasks.map((task) => (
@@ -645,7 +645,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                         </p>
                         {task.completedAt && (
                           <div className="mt-1 text-[10px] text-slate-400 font-mono">
-                            Selesai:{' '}
+                            Completed:{' '}
                             {new Date(task.completedAt).toLocaleTimeString([], {
                               hour: '2-digit',
                               minute: '2-digit',
@@ -668,7 +668,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
                 <User className="w-3.5 h-3.5 text-indigo-500" />
-                <span>Pilih Agent untuk Lihat Task & Detail:</span>
+                <span>Select an Agent to Inspect Tasks & Metrics:</span>
               </span>
             </div>
 
@@ -717,7 +717,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                           color: agent.colorCss,
                         }}
                       >
-                        {isActiveWorker ? '⚡ Active' : 'Lihat Task'}
+                        {isActiveWorker ? '⚡ Active' : 'View Tasks'}
                       </span>
                       <span className="text-[10px] font-mono text-slate-400">
                         {agent.tasksCompleted} done
@@ -734,7 +734,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                 <div className="flex items-center justify-between mb-1">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
                     <Sparkles className="w-3 h-3" />
-                    <span>Task Pipeline Sedang Berjalan:</span>
+                    <span>Active Sprint Pipeline:</span>
                   </span>
                   <span className="text-[10px] font-mono font-bold text-indigo-600 dark:text-indigo-400">
                     {activeTask.progress}%
@@ -757,11 +757,11 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🤝</span>
               <h4 className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                Kolaborasi & Handoff Antar-Agent
+                Inter-Agent Collaboration & Handoffs
               </h4>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-300">
-              Audit transfer hasil kerja, passing spesifikasi teknis, pull request, dan koordinasi antar agent secara otomatis.
+              Audit technical specification handoffs, feature implementations, PR reviews, and automated agent coordination.
             </p>
           </div>
         )}
@@ -773,20 +773,20 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
               <Activity className="w-3 h-3 text-indigo-500" />
               <span>
                 {selectedFilter === 'all'
-                  ? 'Riwayat Aktivitas Keseluruhan'
+                  ? 'Overall Activity Audit Trail'
                   : selectedFilter === 'handoff'
-                    ? 'Riwayat Alur Handoff'
-                    : `Riwayat Kerja Agent: ${selectedAgent?.name}`}
+                    ? 'Inter-Agent Handoff History'
+                    : `Activity History: ${selectedAgent?.name}`}
               </span>
             </span>
             <span className="text-[10px] text-slate-400 font-mono">
-              {filteredLogs.length} event
+              {filteredLogs.length} events
             </span>
           </div>
 
           {filteredLogs.length === 0 ? (
             <div className="text-center py-10 bg-slate-50 dark:bg-slate-800/30 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-xs text-slate-400">
-              Belum ada log aktivitas untuk filter ini.
+              No activity logs recorded for this filter yet.
             </div>
           ) : (
             filteredLogs.map((log) => {
@@ -821,7 +821,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                               borderColor: `${logAgent.colorCss}40`,
                               color: logAgent.colorCss,
                             }}
-                            title={`Filter ke ${logAgent.name}`}
+                            title={`Filter by ${logAgent.name}`}
                           >
                             <span>{logAgent.icon}</span>
                             <span>{logAgent.name}</span>
@@ -839,7 +839,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
                                 borderColor: `${targetAgent.colorCss}40`,
                                 color: targetAgent.colorCss,
                               }}
-                              title={`Filter ke ${targetAgent.name}`}
+                              title={`Filter by ${targetAgent.name}`}
                             >
                               <span>{targetAgent.icon}</span>
                               <span>{targetAgent.name}</span>
@@ -874,7 +874,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
       {/* Footer Info */}
       <div className="p-3 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center justify-between text-[11px] text-slate-500">
         <span>Autonomous multi-agent pipeline</span>
-        <span className="font-mono">{filteredLogs.length} event terfilter</span>
+        <span className="font-mono">{filteredLogs.length} events filtered</span>
       </div>
     </div>
   );

@@ -60,10 +60,21 @@ export type CameraView = 'overview' | 'planner' | 'coder' | 'reviewer' | 'cinema
 
 export type LightingTheme = 'daylight' | 'sunset' | 'night' | 'cyberpunk';
 
+export type GlassTintPreset = 'auto' | 'clear' | 'azure' | 'obsidian';
+
+export interface WindowConfig {
+  glassOpacity: number; // 0.15 (crystal clear) to 0.85 (dark tint)
+  skylineDepth: number; // 0.5 (foggy / close) to 2.0 (far / infinite)
+  windowGlow: number;   // 0.2 (dim) to 2.0 (bright radiant)
+  glassTint: GlassTintPreset;
+}
+
 export interface OfficeSimConfig {
   speed: number;
   isPaused: boolean;
   soundEnabled: boolean;
   theme: LightingTheme;
   cameraView: CameraView;
+  windowConfig?: WindowConfig;
 }
+

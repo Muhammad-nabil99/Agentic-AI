@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import type { AgentId, AgentInfo, CameraView, LightingTheme, Task, TaskPriority, ActivityLog, TaskStatus } from './types/office.ts';
+import type { AgentId, AgentInfo, CameraView, LightingTheme, Task, TaskPriority, ActivityLog, TaskStatus, WindowConfig } from './types/office.ts';
 import {
   INITIAL_AGENTS,
   PRESET_TASKS,
@@ -48,7 +48,15 @@ export default function App() {
   const [theme, setTheme] = useState<LightingTheme>('daylight');
   const [cameraView, setCameraView] = useState<CameraView>('overview');
 
-  // Synchronize document dark class with lighting theme (pagi/daylight, sore/sunset, malam/night, cyberpunk)
+  // Adjustable Panoramic Window & Skyline configuration
+  const [windowConfig, setWindowConfig] = useState<WindowConfig>({
+    glassOpacity: 0.35,
+    skylineDepth: 1.0,
+    windowGlow: 1.0,
+    glassTint: 'auto',
+  });
+
+  // Synchronize document dark class with lighting theme (morning/daylight, sunset, night, cyberpunk)
   useEffect(() => {
     if (theme === 'night' || theme === 'cyberpunk') {
       document.documentElement.classList.add('dark');
@@ -56,6 +64,7 @@ export default function App() {
       document.documentElement.classList.remove('dark');
     }
   }, [theme]);
+
 
   // Overlays & Modals
   const [inspectedAgentId, setInspectedAgentId] = useState<AgentId | null>(null);
@@ -328,6 +337,7 @@ export default function App() {
         activeTask={activeTask}
         cameraView={cameraView}
         theme={theme}
+        windowConfig={windowConfig}
         speed={speed}
         isPaused={isPaused}
         onAgentClick={(id) => setInspectedAgentId(id)}
@@ -365,6 +375,8 @@ export default function App() {
         soundEnabled={soundEnabled}
         theme={theme}
         cameraView={cameraView}
+        windowConfig={windowConfig}
+        onChangeWindowConfig={setWindowConfig}
         onTogglePlay={handleTogglePlay}
         onChangeSpeed={(s) => setSpeed(s)}
         onToggleSound={handleToggleSound}
@@ -373,6 +385,7 @@ export default function App() {
         onOpenNewTask={() => setIsNewTaskModalOpen(true)}
         onOpenFeed={() => setIsActivityLogOpen(true)}
       />
+
 
       {/* Modal: Add New Task */}
       <NewTaskModal

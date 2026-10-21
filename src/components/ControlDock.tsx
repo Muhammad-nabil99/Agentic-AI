@@ -10,11 +10,12 @@ import {
   ChevronDown,
   ChevronUp,
   Camera,
-  FastForward,
-  Info,
   Sparkles,
+  Building2,
+  Sliders,
+  X,
 } from 'lucide-react';
-import type { CameraView, LightingTheme } from '../types/office.ts';
+import type { CameraView, GlassTintPreset, LightingTheme, WindowConfig } from '../types/office.ts';
 
 interface ControlDockProps {
   speed: number;
@@ -22,6 +23,8 @@ interface ControlDockProps {
   soundEnabled: boolean;
   theme: LightingTheme;
   cameraView: CameraView;
+  windowConfig: WindowConfig;
+  onChangeWindowConfig: (config: WindowConfig) => void;
   onTogglePlay: () => void;
   onChangeSpeed: (newSpeed: number) => void;
   onToggleSound: () => void;
@@ -37,6 +40,8 @@ export const ControlDock: React.FC<ControlDockProps> = ({
   soundEnabled,
   theme,
   cameraView,
+  windowConfig,
+  onChangeWindowConfig,
   onTogglePlay,
   onChangeSpeed,
   onToggleSound,
@@ -46,6 +51,23 @@ export const ControlDock: React.FC<ControlDockProps> = ({
   onOpenFeed,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isWindowSettingsOpen, setIsWindowSettingsOpen] = useState(false);
+
+  const handleOpacityChange = (val: number) => {
+    onChangeWindowConfig({ ...windowConfig, glassOpacity: val });
+  };
+
+  const handleDepthChange = (val: number) => {
+    onChangeWindowConfig({ ...windowConfig, skylineDepth: val });
+  };
+
+  const handleGlowChange = (val: number) => {
+    onChangeWindowConfig({ ...windowConfig, windowGlow: val });
+  };
+
+  const handleTintChange = (tint: GlassTintPreset) => {
+    onChangeWindowConfig({ ...windowConfig, glassTint: tint });
+  };
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-30 w-full max-w-[94vw] sm:max-w-2xl px-2 pointer-events-none transition-transform duration-300 ease-in-out">
@@ -69,6 +91,125 @@ export const ControlDock: React.FC<ControlDockProps> = ({
           )}
         </button>
       </div>
+
+      {/* Floating Window & Skyline Settings Drawer */}
+      {!isCollapsed && isWindowSettingsOpen && (
+        <div className="pointer-events-auto mb-2 bg-white/95 dark:bg-slate-900/95 border border-slate-200/90 dark:border-slate-800/90 rounded-2xl p-4 shadow-2xl backdrop-blur-xl animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div className="flex items-center justify-between pb-2.5 mb-3 border-b border-slate-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs font-bold text-slate-800 dark:text-slate-100">
+              <Building2 className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+              <span>Panoramic Glass & City Skyline Settings</span>
+            </div>
+            <button
+              onClick={() => setIsWindowSettingsOpen(false)}
+              className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg transition-colors"
+              aria-label="Close window settings"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-xs">
+            {/* Slider 1: Glass Transparency */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <span>Glass Clarity</span>
+                <span className="font-mono tabular-nums text-indigo-600 dark:text-indigo-400">
+                  {Math.round((1 - windowConfig.glassOpacity) * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.12"
+                max="0.85"
+                step="0.05"
+                value={windowConfig.glassOpacity}
+                onChange={(e) => handleOpacityChange(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
+                <span>Crystal Clear</span>
+                <span>Dark Tinted</span>
+              </div>
+            </div>
+
+            {/* Slider 2: Skyline Depth */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <span>Skyline Distance</span>
+                <span className="font-mono tabular-nums text-indigo-600 dark:text-indigo-400">
+                  {windowConfig.skylineDepth.toFixed(1)}x
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="2.0"
+                step="0.1"
+                value={windowConfig.skylineDepth}
+                onChange={(e) => handleDepthChange(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
+                <span>Urban Mist</span>
+                <span>Infinite Vista</span>
+              </div>
+            </div>
+
+            {/* Slider 3: City Window Glow */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+                <span>Building Lights Glow</span>
+                <span className="font-mono tabular-nums text-indigo-600 dark:text-indigo-400">
+                  {Math.round(windowConfig.windowGlow * 100)}%
+                </span>
+              </div>
+              <input
+                type="range"
+                min="0.2"
+                max="2.2"
+                step="0.1"
+                value={windowConfig.windowGlow}
+                onChange={(e) => handleGlowChange(parseFloat(e.target.value))}
+                className="w-full h-1.5 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+              />
+              <div className="flex justify-between text-[10px] text-slate-400 dark:text-slate-500">
+                <span>Muted</span>
+                <span>Radiant</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Quick Glass Tint Presets */}
+          <div className="mt-3.5 pt-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
+            <span className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+              Glass Tint Style:
+            </span>
+            <div className="flex items-center gap-1.5">
+              {(
+                [
+                  { id: 'auto', label: 'Auto (Theme)' },
+                  { id: 'clear', label: 'Pure Clear' },
+                  { id: 'azure', label: 'Azure Blue' },
+                  { id: 'obsidian', label: 'Obsidian Smoke' },
+                ] as const
+              ).map((preset) => (
+                <button
+                  key={preset.id}
+                  onClick={() => handleTintChange(preset.id)}
+                  className={`px-2 py-1 text-[11px] font-medium rounded-lg transition-all ${
+                    windowConfig.glassTint === preset.id
+                      ? 'bg-indigo-600 text-white shadow-sm font-semibold'
+                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Main Unified Control Bar */}
       {!isCollapsed && (
@@ -168,7 +309,23 @@ export const ControlDock: React.FC<ControlDockProps> = ({
 
           {/* Group 3: Utility & Theme Controls */}
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Theme Toggle (Pagi, Sore, Malam, Cyberpunk) */}
+            {/* Window & Skyline Customization Button */}
+            <button
+              onClick={() => setIsWindowSettingsOpen(!isWindowSettingsOpen)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs font-semibold border transition-all ${
+                isWindowSettingsOpen
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 border-slate-200 dark:border-slate-700 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+              title="Adjust Window Glass & Skyline"
+              aria-label="Adjust Window Glass & Skyline"
+            >
+              <Building2 className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline text-[11px]">Skyline</span>
+              <Sliders className="w-3 h-3 opacity-70" />
+            </button>
+
+            {/* Theme Toggle (Morning, Sunset, Night, Cyberpunk) */}
             <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => onChangeTheme('daylight')}
@@ -177,11 +334,11 @@ export const ControlDock: React.FC<ControlDockProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Tema Pagi (Daylight)"
-                aria-label="Set daylight theme"
+                title="Morning Theme (Daylight)"
+                aria-label="Set morning theme"
               >
                 <Sun className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Pagi</span>
+                <span className="hidden sm:inline text-[11px]">Morning</span>
               </button>
               <button
                 onClick={() => onChangeTheme('sunset')}
@@ -190,11 +347,11 @@ export const ControlDock: React.FC<ControlDockProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-orange-500 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Tema Sore (Sunset)"
+                title="Sunset Theme (Golden Hour)"
                 aria-label="Set sunset theme"
               >
                 <Sunset className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Sore</span>
+                <span className="hidden sm:inline text-[11px]">Sunset</span>
               </button>
               <button
                 onClick={() => onChangeTheme('night')}
@@ -203,11 +360,11 @@ export const ControlDock: React.FC<ControlDockProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-sky-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Tema Malam (Night)"
+                title="Night Theme (Desk Lamps On)"
                 aria-label="Set night theme"
               >
                 <Moon className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline text-[11px]">Malam</span>
+                <span className="hidden sm:inline text-[11px]">Night</span>
               </button>
               <button
                 onClick={() => onChangeTheme('cyberpunk')}
@@ -216,7 +373,7 @@ export const ControlDock: React.FC<ControlDockProps> = ({
                     ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-sm'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Tema Cyberpunk (Neon)"
+                title="Cyberpunk Theme (Neon Glow)"
                 aria-label="Set cyberpunk theme"
               >
                 <Sparkles className="w-3.5 h-3.5" />
