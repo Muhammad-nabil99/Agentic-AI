@@ -18,8 +18,11 @@ import {
   ChevronRight,
   User,
   RotateCcw,
+  Sun,
+  Sunset,
+  Moon,
 } from 'lucide-react';
-import type { AgentId, AgentInfo, ActivityLog, Task, TaskPriority } from '../types/office.ts';
+import type { AgentId, AgentInfo, ActivityLog, Task, TaskPriority, LightingTheme } from '../types/office.ts';
 
 interface ActivityLogDrawerProps {
   isOpen: boolean;
@@ -29,6 +32,8 @@ interface ActivityLogDrawerProps {
   taskQueue: Task[];
   completedTasks: Task[];
   initialAgentFilter?: AgentId | null;
+  theme?: LightingTheme;
+  onChangeTheme?: (theme: LightingTheme) => void;
   onClose: () => void;
   onClearLogs?: () => void;
   onFocusAgent?: (agentId: AgentId) => void;
@@ -45,6 +50,8 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
   taskQueue,
   completedTasks,
   initialAgentFilter = null,
+  theme,
+  onChangeTheme,
   onClose,
   onClearLogs,
   onFocusAgent,
@@ -149,9 +156,9 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
   };
 
   return (
-    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg md:max-w-xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col animate-slide-left">
+    <div className="fixed inset-y-0 right-0 z-50 w-full max-w-lg md:max-w-xl bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col animate-slide-left">
       {/* Header */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3 bg-white dark:bg-slate-900">
         <div className="flex items-center gap-2.5">
           <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 text-white flex items-center justify-center shadow-md">
             <Activity className="w-5 h-5" />
@@ -170,6 +177,60 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          {/* Quick Theme Buttons inside Activity drawer */}
+          {onChangeTheme && theme && (
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-0.5 rounded-xl border border-slate-200 dark:border-slate-700 mr-1">
+              <button
+                onClick={() => onChangeTheme('daylight')}
+                className={`p-1.5 rounded-lg transition-all ${
+                  theme === 'daylight'
+                    ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Tema Pagi (Daylight)"
+                aria-label="Set daylight theme"
+              >
+                <Sun className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onChangeTheme('sunset')}
+                className={`p-1.5 rounded-lg transition-all ${
+                  theme === 'sunset'
+                    ? 'bg-white dark:bg-slate-700 text-orange-500 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Tema Sore (Sunset)"
+                aria-label="Set sunset theme"
+              >
+                <Sunset className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onChangeTheme('night')}
+                className={`p-1.5 rounded-lg transition-all ${
+                  theme === 'night'
+                    ? 'bg-white dark:bg-slate-700 text-sky-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Tema Malam (Night)"
+                aria-label="Set night theme"
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => onChangeTheme('cyberpunk')}
+                className={`p-1.5 rounded-lg transition-all ${
+                  theme === 'cyberpunk'
+                    ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-xs'
+                    : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                }`}
+                title="Tema Cyberpunk (Neon)"
+                aria-label="Set cyberpunk theme"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+
           {onClearLogs && (
             <button
               onClick={onClearLogs}
@@ -190,7 +251,7 @@ export const ActivityLogDrawer: React.FC<ActivityLogDrawerProps> = ({
       </div>
 
       {/* Filter Bar Antar Kerja Tiap-Tiap Agent */}
-      <div className="px-4 py-2.5 border-b border-slate-200/80 dark:border-slate-800/80">
+      <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
         <div className="flex items-center justify-between mb-1.5">
           <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 flex items-center gap-1.5">
             <Filter className="w-3 h-3 text-indigo-500" />

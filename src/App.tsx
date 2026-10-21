@@ -48,6 +48,15 @@ export default function App() {
   const [theme, setTheme] = useState<LightingTheme>('daylight');
   const [cameraView, setCameraView] = useState<CameraView>('overview');
 
+  // Synchronize document dark class with lighting theme (pagi/daylight, sore/sunset, malam/night, cyberpunk)
+  useEffect(() => {
+    if (theme === 'night' || theme === 'cyberpunk') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [theme]);
+
   // Overlays & Modals
   const [inspectedAgentId, setInspectedAgentId] = useState<AgentId | null>(null);
   const [isNewTaskModalOpen, setIsNewTaskModalOpen] = useState<boolean>(false);
@@ -303,8 +312,10 @@ export default function App() {
 
   return (
     <div
-      className={`relative w-screen h-screen overflow-hidden ${
+      className={`relative w-screen h-screen overflow-hidden transition-colors duration-500 ${
         theme === 'cyberpunk'
+          ? 'bg-slate-950 text-slate-100'
+          : theme === 'night'
           ? 'bg-slate-950 text-slate-100'
           : theme === 'sunset'
           ? 'bg-amber-50 text-slate-900'
@@ -337,6 +348,8 @@ export default function App() {
         queueCount={taskQueue.length}
         activeAgentId={activeScriptRef.current ? activeScriptRef.current[currentStepIndexRef.current]?.actor ?? null : null}
         agents={agents}
+        theme={theme}
+        onChangeTheme={(th) => setTheme(th)}
         onOpenNewTask={() => setIsNewTaskModalOpen(true)}
         onOpenFeed={() => setIsActivityLogOpen(true)}
         onSelectAgent={(id) => {
@@ -388,6 +401,8 @@ export default function App() {
         taskQueue={taskQueue}
         completedTasks={completedTasks}
         initialAgentFilter={activityAgentFilter}
+        theme={theme}
+        onChangeTheme={(th) => setTheme(th)}
         onClose={() => {
           setIsActivityLogOpen(false);
           setActivityAgentFilter(null);

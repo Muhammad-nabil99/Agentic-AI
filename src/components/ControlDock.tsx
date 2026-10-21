@@ -12,6 +12,7 @@ import {
   Camera,
   FastForward,
   Info,
+  Sparkles,
 } from 'lucide-react';
 import type { CameraView, LightingTheme } from '../types/office.ts';
 
@@ -167,43 +168,59 @@ export const ControlDock: React.FC<ControlDockProps> = ({
 
           {/* Group 3: Utility & Theme Controls */}
           <div className="flex items-center gap-1.5 ml-auto">
-            {/* Theme Toggle */}
-            <div className="flex items-center bg-slate-100 dark:bg-slate-800/70 p-1 rounded-xl">
+            {/* Theme Toggle (Pagi, Sore, Malam, Cyberpunk) */}
+            <div className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl border border-slate-200 dark:border-slate-700">
               <button
                 onClick={() => onChangeTheme('daylight')}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all ${
                   theme === 'daylight'
                     ? 'bg-white dark:bg-slate-700 text-amber-500 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-700'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Daylight mode"
+                title="Tema Pagi (Daylight)"
                 aria-label="Set daylight theme"
               >
-                <Sun className="w-4 h-4" />
+                <Sun className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Pagi</span>
               </button>
               <button
                 onClick={() => onChangeTheme('sunset')}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all ${
                   theme === 'sunset'
                     ? 'bg-white dark:bg-slate-700 text-orange-500 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-700'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Sunset golden hour"
+                title="Tema Sore (Sunset)"
                 aria-label="Set sunset theme"
               >
-                <Sunset className="w-4 h-4" />
+                <Sunset className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Sore</span>
+              </button>
+              <button
+                onClick={() => onChangeTheme('night')}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  theme === 'night'
+                    ? 'bg-white dark:bg-slate-700 text-sky-400 shadow-sm'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Tema Malam (Night)"
+                aria-label="Set night theme"
+              >
+                <Moon className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Malam</span>
               </button>
               <button
                 onClick={() => onChangeTheme('cyberpunk')}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-semibold transition-all ${
                   theme === 'cyberpunk'
                     ? 'bg-white dark:bg-slate-700 text-purple-400 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-700'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
-                title="Cyberpunk night mode"
+                title="Tema Cyberpunk (Neon)"
                 aria-label="Set cyberpunk theme"
               >
-                <Moon className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline text-[11px]">Cyberpunk</span>
               </button>
             </div>
 

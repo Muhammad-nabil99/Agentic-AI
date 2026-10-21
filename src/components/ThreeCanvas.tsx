@@ -713,6 +713,13 @@ export const ThreeCanvas: React.FC<ThreeCanvasProps> = ({
           lightsRef.current.sun.intensity = 1.4;
           lightsRef.current.hemi.color.setHex(0xffe2c7);
           lightsRef.current.hemi.groundColor.setHex(0xa36872);
+        } else if (curTheme === 'night') {
+          sceneRef.current.background = new THREE.Color(0x0a0f1d);
+          sceneRef.current.fog = new THREE.Fog(0x0a0f1d, 15, 40);
+          lightsRef.current.sun.color.setHex(0x7ca1d9);
+          lightsRef.current.sun.intensity = 0.55;
+          lightsRef.current.hemi.color.setHex(0x1a263d);
+          lightsRef.current.hemi.groundColor.setHex(0x080b14);
         } else if (curTheme === 'cyberpunk') {
           sceneRef.current.background = new THREE.Color(0x131224);
           sceneRef.current.fog = new THREE.Fog(0x131224, 15, 38);

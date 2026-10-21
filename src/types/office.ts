@@ -58,7 +58,7 @@ export interface ActivityLog {
 
 export type CameraView = 'overview' | 'planner' | 'coder' | 'reviewer' | 'cinematic';
 
-export type LightingTheme = 'daylight' | 'sunset' | 'cyberpunk';
+export type LightingTheme = 'daylight' | 'sunset' | 'night' | 'cyberpunk';
 
 export interface OfficeSimConfig {
   speed: number;

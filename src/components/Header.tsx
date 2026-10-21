@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   ListTodo,
   CheckCircle2,
@@ -7,8 +6,11 @@ import {
   Plus,
   Layers,
   Sparkles,
+  Sun,
+  Sunset,
+  Moon,
 } from 'lucide-react';
-import type { AgentId, AgentInfo, Task } from '../types/office.ts';
+import type { AgentId, AgentInfo, Task, LightingTheme } from '../types/office.ts';
 
 interface HeaderProps {
   activeTask: Task | null;
@@ -16,6 +18,8 @@ interface HeaderProps {
   queueCount: number;
   activeAgentId: AgentId | null;
   agents: Record<AgentId, AgentInfo>;
+  theme?: LightingTheme;
+  onChangeTheme?: (theme: LightingTheme) => void;
   onOpenNewTask: () => void;
   onOpenFeed: () => void;
   onSelectAgent: (agentId: AgentId) => void;
@@ -27,6 +31,8 @@ export const Header: React.FC<HeaderProps> = ({
   queueCount,
   activeAgentId,
   agents,
+  theme,
+  onChangeTheme,
   onOpenNewTask,
   onOpenFeed,
   onSelectAgent,
@@ -141,6 +147,60 @@ export const Header: React.FC<HeaderProps> = ({
             <span>{queueCount}</span>
           </div>
         </div>
+
+        {/* Quick Theme Filter (Pagi, Sore, Malam, Cyberpunk) */}
+        {onChangeTheme && theme && (
+          <div className="hidden sm:flex items-center bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 p-1 rounded-2xl shadow-xl backdrop-blur-md">
+            <button
+              onClick={() => onChangeTheme('daylight')}
+              className={`p-1.5 rounded-xl transition-all ${
+                theme === 'daylight'
+                  ? 'bg-amber-100 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+              title="Tema Pagi (Daylight)"
+              aria-label="Set daylight theme"
+            >
+              <Sun className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onChangeTheme('sunset')}
+              className={`p-1.5 rounded-xl transition-all ${
+                theme === 'sunset'
+                  ? 'bg-orange-100 dark:bg-orange-950/70 text-orange-600 dark:text-orange-400 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+              title="Tema Sore (Sunset)"
+              aria-label="Set sunset theme"
+            >
+              <Sunset className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onChangeTheme('night')}
+              className={`p-1.5 rounded-xl transition-all ${
+                theme === 'night'
+                  ? 'bg-sky-100 dark:bg-sky-950/70 text-sky-600 dark:text-sky-400 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+              title="Tema Malam (Night)"
+              aria-label="Set night theme"
+            >
+              <Moon className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => onChangeTheme('cyberpunk')}
+              className={`p-1.5 rounded-xl transition-all ${
+                theme === 'cyberpunk'
+                  ? 'bg-purple-100 dark:bg-purple-950/70 text-purple-600 dark:text-purple-400 font-bold shadow-xs'
+                  : 'text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+              }`}
+              title="Tema Cyberpunk (Neon)"
+              aria-label="Set cyberpunk theme"
+            >
+              <Sparkles className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Activity Feed Button */}
         <button
